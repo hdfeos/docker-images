@@ -25,5 +25,7 @@ ENV MPLBACKEND=agg
 RUN conda install -y netcdf4
 RUN conda install -y hdf4
 RUN conda install -y basemap
+RUN apt-get install -y gcc python-dev python-numpy libhdf4-dev 
+RUN pip install python-hdf4
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
