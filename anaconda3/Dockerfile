@@ -21,7 +21,9 @@ RUN apt-get install -y curl grep sed dpkg && \
     apt-get clean
 
 ENV PATH /opt/conda/bin:$PATH
+ENV MPLBACKEND=agg  
 RUN conda install -y netcdf4
-
+RUN conda install -y hdf4
+RUN conda install -y basemap
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
