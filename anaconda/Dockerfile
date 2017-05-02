@@ -22,6 +22,7 @@ RUN apt-get install -y curl grep sed dpkg && \
 
 ENV PATH /opt/conda/bin:$PATH
 RUN conda install -y pyqt=4.11
+RUN conda install -y basemap
 RUN conda install -y -c conda-forge pyhdf
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
