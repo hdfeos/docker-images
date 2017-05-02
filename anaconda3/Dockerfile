@@ -21,7 +21,7 @@ RUN apt-get install -y curl grep sed dpkg && \
     apt-get clean
 
 ENV PATH /opt/conda/bin:$PATH
-RUN conda install -y -c conda-forge pyhdf
+RUN conda install -y netcdf4
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
