@@ -1,6 +1,6 @@
 FROM debian:8.5
 
-MAINTAINER Kamil Kwiek <kamil.kwiek@continuum.io>
+MAINTAINER HDF-EOS Tools and Information Center <eoshelp@hdfgroup.org>
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
