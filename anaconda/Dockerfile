@@ -22,8 +22,12 @@ RUN apt-get install -y curl grep sed dpkg && \
 
 ENV PATH /opt/conda/bin:$PATH
 ENV MPLBACKEND=agg  
-RUN conda install -y pyqt=4.11
+# RUN conda install -y pyqt=4.11
+RUN conda install -y netcdf4
+RUN conda install -y hdf4
 RUN conda install -y basemap
-RUN conda install -y -c conda-forge pyhdf
+RUN apt-get install -y gcc python-dev python-numpy libhdf4-dev 
+RUN pip install python-hdf4
+# RUN conda install -y -c conda-forge pyhdf
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 CMD [ "/bin/bash" ]
