@@ -1,31 +1,75 @@
-FROM debian:8.5
+FROM debian:12.8-slim@sha256:1537a6a1cbc4b4fd401da800ee9480207e7dc1f23560c21259f681db56768f63
 
 MAINTAINER HDF-EOS Tools and Information Center <eoshelp@hdfgroup.org>
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH=/opt/conda/bin:$PATH
 
-RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
-    libglib2.0-0 libxext6 libsm6 libxrender1 \
-    git mercurial subversion
+# renovate: datasource=custom.anaconda_installer
+ARG INSTALLER_URL_LINUX64="https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh"
+ARG SHA256SUM_LINUX64="3ba0a298155c32fbfd80cbc238298560bf69a2df511783054adfc151b76d80d8"
+# renovate: datasource=custom.anaconda_installer
+ARG INSTALLER_URL_S390X="https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-s390x.sh"
+ARG SHA256SUM_S390X="e00bd5e6c275695e8050a45aa85790315f504c95243dfe3632f505284310f3c4"
+# renovate: datasource=custom.anaconda_installer
+ARG INSTALLER_URL_AARCH64="https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-aarch64.sh"
+ARG SHA256SUM_AARCH64="489c608e8bddd2cf29dfbdd811cf99087cd6b6a0615d41c6f9058ce340594b65"
 
-RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
-    wget --quiet https://repo.continuum.io/archive/Anaconda3-4.3.1-Linux-x86_64.sh -O ~/anaconda.sh && \
-    /bin/bash ~/anaconda.sh -b -p /opt/conda && \
-    rm ~/anaconda.sh
+# hadolint ignore=DL3008
+RUN set -x && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+        bzip2 \
+        ca-certificates \
+        gcc \
+        git \
+        libhdf4-dev \
+        libglib2.0-0 \
+        libsm6 \
+        libxcomposite1 \
+        libxcursor1 \
+        libxdamage1 \
+        libxext6 \
+        libxfixes3 \
+        libxi6 \
+        libxinerama1 \
+        libxrandr2 \
+        libxrender1 \
+        mercurial \
+        openssh-client \
+        procps \
+        python3-dev \
+        python3-numpy \
+        subversion \
+        wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* && \
+    UNAME_M="$(uname -m)" && \
+    if [ "${UNAME_M}" = "x86_64" ]; then \
+        INSTALLER_URL=${INSTALLER_URL_LINUX64}; \
+        SHA256SUM=${SHA256SUM_LINUX64}; \
+    elif [ "${UNAME_M}" = "s390x" ]; then \
+        INSTALLER_URL=${INSTALLER_URL_S390X}; \
+        SHA256SUM=${SHA256SUM_S390X}; \
+    elif [ "${UNAME_M}" = "aarch64" ]; then \
+        INSTALLER_URL=${INSTALLER_URL_AARCH64}; \
+        SHA256SUM=${SHA256SUM_AARCH64}; \
+    fi && \
+    wget "${INSTALLER_URL}" -O anaconda.sh -q && \
+    echo "${SHA256SUM} anaconda.sh" > shasum && \
+    sha256sum --check --status shasum && \
+    /bin/bash anaconda.sh -b -p /opt/conda && \
+    rm anaconda.sh shasum && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc && \
+    find /opt/conda/ -follow -type f -name '*.a' -delete && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
+    /opt/conda/bin/conda clean -afy
 
-RUN apt-get install -y curl grep sed dpkg emacs-nox vim-nox && \
-    TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` && \
-    curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
-    dpkg -i tini.deb && \
-    rm tini.deb && \
-    apt-get clean
-
-ENV PATH /opt/conda/bin:$PATH
-ENV MPLBACKEND=agg  
 RUN conda install -y netcdf4
 RUN conda install -y hdf4
 RUN conda install -y basemap
-RUN apt-get install -y gcc python-dev python-numpy libhdf4-dev 
-RUN pip install python-hdf4
-ENTRYPOINT [ "/usr/bin/tini", "--" ]
+RUN pip install pyhdf
+
 CMD [ "/bin/bash" ]
